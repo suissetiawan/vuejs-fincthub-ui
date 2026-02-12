@@ -32,14 +32,23 @@
         >
           <div class="flex items-start justify-between">
             <div class="space-y-1">
-              <h3
-                class="text-lg font-black text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors"
-              >
-                {{ cat.name }}
-              </h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                {{ cat.description || 'No description' }}
-              </p>
+              <div class="flex items-center gap-2">
+                <h3
+                  class="text-lg font-black text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors"
+                >
+                  {{ cat.name }}
+                </h3>
+                <span
+                  :class="
+                    cat.type === 'INCOME'
+                      ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
+                      : 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                  "
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                >
+                  {{ cat.type }}
+                </span>
+              </div>
             </div>
             <div
               class="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-colors"

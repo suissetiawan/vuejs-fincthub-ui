@@ -25,40 +25,67 @@
           </button>
         </div>
 
-        <div v-if="!isEditing" class="space-y-8">
-          <!-- View Mode -->
+        <div v-if="detailLoading" class="space-y-8 animate-pulse">
+          <!-- Skeleton View Mode -->
           <div class="flex flex-col items-center py-4">
+            <div class="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-3xl mb-4"></div>
+            <div class="w-48 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl mb-4"></div>
+            <div class="w-32 h-6 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+              <div class="w-12 h-3 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+              <div class="w-24 h-5 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+              <div class="w-12 h-3 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+              <div class="w-24 h-5 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 pt-4">
+            <div class="w-full h-14 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+            <div class="w-full h-14 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+          </div>
+        </div>
+
+        <div v-else-if="!isEditing" class="space-y-8">
+          <!-- View Mode -->
+          <div v-if="detailTransaction" class="flex flex-col items-center py-4">
             <div
               :class="
-                transaction.type === 'INCOME'
+                detailTransaction.type === 'INCOME'
                   ? 'bg-green-100 text-green-600 dark:bg-green-900/30'
                   : 'bg-red-100 text-red-600 dark:bg-red-900/30'
               "
               class="p-4 rounded-3xl mb-4"
             >
               <component
-                :is="transaction.type === 'INCOME' ? ArrowDownLeft : ArrowUpRight"
+                :is="detailTransaction.type === 'INCOME' ? ArrowDownLeft : ArrowUpRight"
                 :size="40"
               />
             </div>
             <h3 class="text-3xl font-black text-gray-900 dark:text-white">
-              {{ transaction.type === 'INCOME' ? '+' : '-' }} Rp
-              {{ formatNumber(transaction.amount) }}
+              {{ detailTransaction.type === 'INCOME' ? '+' : '-' }} Rp
+              {{ formatNumber(detailTransaction.amount) }}
             </h3>
             <p class="text-gray-500 dark:text-gray-400 font-medium mt-1">
-              {{ transaction.description }}
+              {{ detailTransaction.description }}
             </p>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div v-if="detailTransaction" class="grid grid-cols-2 gap-4">
             <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
               <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Category</p>
-              <p class="font-bold text-gray-900 dark:text-white">{{ transaction.category }}</p>
+              <p class="font-bold text-gray-900 dark:text-white">
+                {{ detailTransaction.category }}
+              </p>
             </div>
             <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
               <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
               <p class="font-bold text-gray-900 dark:text-white">
-                {{ formatDate(transaction.date) }}
+                {{ formatDate(detailTransaction.date) }}
               </p>
             </div>
           </div>
@@ -80,8 +107,54 @@
         </div>
 
         <div v-else class="space-y-6">
-          <!-- Edit Mode -->
+          <!-- Type Toggle -->
+          <div class="flex p-1 bg-gray-100 dark:bg-gray-900 rounded-2xl">
+            <button
+              type="button"
+              @click="editedForm.type = 'EXPENSE'"
+              :class="
+                editedForm.type === 'EXPENSE'
+                  ? 'bg-white dark:bg-gray-800 shadow-sm text-red-600'
+                  : 'text-gray-500'
+              "
+              class="flex-1 py-3 font-bold rounded-xl transition-all active:scale-95"
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              @click="editedForm.type = 'INCOME'"
+              :class="
+                editedForm.type === 'INCOME'
+                  ? 'bg-white dark:bg-gray-800 shadow-sm text-green-600'
+                  : 'text-gray-500'
+              "
+              class="flex-1 py-3 font-bold rounded-xl transition-all active:scale-95"
+            >
+              Income
+            </button>
+          </div>
+
           <div class="space-y-4">
+            <!-- Amount -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+                >Amount (Rp)</label
+              >
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400"
+                  >Rp</span
+                >
+                <input
+                  v-model.number="editedForm.amount"
+                  type="number"
+                  class="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white text-xl font-black"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <!-- Description -->
             <div>
               <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
                 >Description</label
@@ -94,62 +167,49 @@
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
-                >Amount (Rp)</label
-              >
-              <input
-                v-model.number="editedForm.amount"
-                type="number"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
-                placeholder="0"
-              />
-            </div>
-
             <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
-                  >Type</label
-                >
-                <select
-                  v-model="editedForm.type"
-                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
-                >
-                  <option value="INCOME">Income</option>
-                  <option value="EXPENSE">Expense</option>
-                </select>
-              </div>
-              <div>
+              <!-- Category Selection -->
+              <div class="relative group">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
                   >Category</label
                 >
-                <input
+                <select
                   v-model="editedForm.category"
-                  type="text"
-                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
-                  placeholder="Food, Salary, etc."
+                  class="appearance-none w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white cursor-pointer"
+                >
+                  <option value="" disabled>Select</option>
+                  <option v-for="cat in categoryStore.categories" :key="cat.id" :value="cat.name">
+                    {{ cat.name }}
+                  </option>
+                </select>
+                <ChevronDown
+                  class="absolute right-3 top-[3.2rem] -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-blue-500 transition-colors"
+                  :size="18"
                 />
               </div>
-            </div>
 
-            <div>
-              <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
-                >Date</label
-              >
-              <input
-                v-model="editedForm.date"
-                type="date"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
-              />
+              <!-- Date Selection -->
+              <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+                  >Date</label
+                >
+                <input
+                  v-model="editedForm.date"
+                  type="date"
+                  class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
+                />
+              </div>
             </div>
           </div>
 
           <div class="flex flex-col gap-3 pt-6">
             <button
               @click="handleSave"
-              class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all active:scale-95"
+              :disabled="loading"
+              class="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-lg rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              Update Transaction
+              <Loader2 v-if="loading" class="animate-spin" :size="20" />
+              <template v-else>Update Transaction</template>
             </button>
             <button
               @click="isEditing = false"
@@ -165,9 +225,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { X, ArrowDownLeft, ArrowUpRight, Edit2, Trash2 } from 'lucide-vue-next'
+import { ref, watch, onMounted } from 'vue'
+import {
+  X,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Edit2,
+  Trash2,
+  ChevronDown,
+  Loader2,
+} from 'lucide-vue-next'
 import { useTransactionStore, type Transaction } from '@/stores/transaction'
+import { useCategoryStore } from '@/stores/category'
 
 const props = defineProps<{
   isOpen: boolean
@@ -176,16 +245,55 @@ const props = defineProps<{
 
 const emit = defineEmits(['close'])
 const transactionStore = useTransactionStore()
+const categoryStore = useCategoryStore()
 
 const isEditing = ref(false)
+const loading = ref(false)
+const detailLoading = ref(false)
+const detailTransaction = ref<Transaction | null>(null)
 const editedForm = ref({ ...props.transaction })
 
+const getFormattedDate = (dateStr: string) => {
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+watch(isEditing, (newVal) => {
+  if (newVal && detailTransaction.value) {
+    editedForm.value = {
+      ...detailTransaction.value,
+      date: getFormattedDate(detailTransaction.value.date),
+    }
+  }
+})
+
 watch(
-  () => props.transaction,
-  (newVal) => {
-    editedForm.value = { ...newVal }
-    isEditing.value = false
+  () => props.isOpen,
+  async (newVal) => {
+    if (newVal) {
+      isEditing.value = false
+      detailLoading.value = true
+      try {
+        const data = await transactionStore.getTransactionById(props.transaction.id)
+        detailTransaction.value = data
+        // Prep for edit mode
+        editedForm.value = {
+          ...data,
+          date: getFormattedDate(data.date),
+        }
+      } catch (error) {
+        console.error('Failed to fetch transaction details:', error)
+        detailTransaction.value = props.transaction // Fallback to prop data
+      } finally {
+        detailLoading.value = false
+      }
+
+      if (categoryStore.categories.length === 0) {
+        categoryStore.fetchCategories()
+      }
+    }
   },
+  { immediate: true },
 )
 
 const formatNumber = (num: number) => {
@@ -205,11 +313,14 @@ const close = () => {
 }
 
 const handleSave = async () => {
+  loading.value = true
   try {
     await transactionStore.updateTransaction(props.transaction.id, editedForm.value)
     close()
   } catch (error) {
     console.error('Update failed:', error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -223,6 +334,11 @@ const confirmDelete = async () => {
     }
   }
 }
+onMounted(() => {
+  if (categoryStore.categories.length === 0) {
+    categoryStore.fetchCategories()
+  }
+})
 </script>
 
 <style scoped>

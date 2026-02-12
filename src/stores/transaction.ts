@@ -72,5 +72,14 @@ export const useTransactionStore = defineStore('transaction', {
         uiStore.setLoading(false)
       }
     },
+    async getTransactionById(id: number) {
+      try {
+        const response = await api.get(`/api/transactions/${id}`)
+        return response.data.response
+      } catch (error) {
+        console.error('Fetch transaction detail failed:', error)
+        throw error
+      }
+    },
   },
 })

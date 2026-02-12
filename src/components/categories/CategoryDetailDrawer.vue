@@ -25,7 +25,7 @@
           </button>
         </div>
 
-        <div v-if="!isEditing" class="space-y-8">
+        <div v-if="!isEditing && category" class="space-y-8">
           <!-- View Mode -->
           <div class="space-y-6">
             <div class="p-6 bg-gray-50 dark:bg-gray-900 rounded-3xl">
@@ -41,10 +41,13 @@
               <p
                 class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider mb-2"
               >
-                Description
+                Type
               </p>
-              <p class="text-gray-700 dark:text-gray-300">
-                {{ category.description || 'No description provided.' }}
+              <p
+                :class="category.type === 'INCOME' ? 'text-green-600' : 'text-red-600'"
+                class="text-lg font-black"
+              >
+                {{ category.type }}
               </p>
             </div>
           </div>
@@ -80,16 +83,37 @@
               />
             </div>
 
+            <!-- Type Selection -->
             <div>
               <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
-                >Description</label
+                >Type</label
               >
-              <textarea
-                v-model="form.description"
-                rows="3"
-                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white resize-none"
-                placeholder="Describe this category..."
-              ></textarea>
+              <div class="flex p-1 bg-gray-100 dark:bg-gray-900 rounded-2xl">
+                <button
+                  type="button"
+                  @click="form.type = 'EXPENSE'"
+                  :class="
+                    form.type === 'EXPENSE'
+                      ? 'bg-white dark:bg-gray-800 shadow-sm text-red-600'
+                      : 'text-gray-500'
+                  "
+                  class="flex-1 py-3 font-bold rounded-xl transition-all active:scale-95"
+                >
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  @click="form.type = 'INCOME'"
+                  :class="
+                    form.type === 'INCOME'
+                      ? 'bg-white dark:bg-gray-800 shadow-sm text-green-600'
+                      : 'text-gray-500'
+                  "
+                  class="flex-1 py-3 font-bold rounded-xl transition-all active:scale-95"
+                >
+                  Income
+                </button>
+              </div>
             </div>
           </div>
 
@@ -131,7 +155,7 @@ const isEditing = ref(false)
 const isNew = computed(() => !props.category?.id)
 const form = ref({
   name: '',
-  description: '',
+  type: 'EXPENSE' as 'INCOME' | 'EXPENSE',
 })
 
 watch(
@@ -141,11 +165,11 @@ watch(
       if (props.category) {
         form.value = {
           name: props.category.name,
-          description: props.category.description || '',
+          type: props.category.type || 'EXPENSE',
         }
         isEditing.value = false
       } else {
-        form.value = { name: '', description: '' }
+        form.value = { name: '', type: 'EXPENSE' }
         isEditing.value = true
       }
     }
