@@ -66,11 +66,17 @@
                 :size="40"
               />
             </div>
-            <h3 class="text-3xl font-black text-gray-900 dark:text-white">
+            <h3
+              :class="getFontSizeClass(detailTransaction.amount, 'text-3xl')"
+              class="font-black text-gray-900 dark:text-white transition-all"
+            >
               {{ detailTransaction.type === 'INCOME' ? '+' : '-' }} Rp
               {{ formatNumber(detailTransaction.amount) }}
             </h3>
-            <p class="text-gray-500 dark:text-gray-400 font-medium mt-1">
+            <p
+              :class="getTextFontSizeClass(detailTransaction.description, 'font-medium')"
+              class="text-gray-500 dark:text-gray-400 mt-1 transition-all text-center"
+            >
               {{ detailTransaction.description }}
             </p>
           </div>
@@ -237,6 +243,7 @@ import {
 } from 'lucide-vue-next'
 import { useTransactionStore, type Transaction } from '@/stores/transaction'
 import { useCategoryStore } from '@/stores/category'
+import { getFontSizeClass, getTextFontSizeClass } from '@/utils/amountHelper'
 
 const props = defineProps<{
   isOpen: boolean
@@ -303,8 +310,10 @@ const formatNumber = (num: number) => {
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('id-ID', {
     day: 'numeric',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { setupMockInterceptor } from '@/mocks'
 
 const api = axios.create({
   baseURL: '/',
@@ -7,6 +8,9 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+// Setup Mock Interceptor
+setupMockInterceptor(api)
 
 export const setupInterceptors = (authStore: any) => {
   api.interceptors.request.use(

@@ -51,7 +51,13 @@
         class="p-4 bg-green-50 rounded-2xl border border-green-100 dark:bg-green-900/10 dark:border-green-900/20"
       >
         <p class="text-xs text-green-600 dark:text-green-400 font-medium">Monthly Income</p>
-        <p class="text-lg font-bold text-green-700 dark:text-green-300">
+        <p
+          :class="[
+            getFontSizeClass(monthlyIncome, 'text-lg'),
+            'text-green-700 dark:text-green-300',
+          ]"
+          class="font-bold transition-all"
+        >
           Rp {{ formatNumber(monthlyIncome) }}
         </p>
       </div>
@@ -59,7 +65,10 @@
         class="p-4 bg-red-50 rounded-2xl border border-red-100 dark:bg-red-900/10 dark:border-red-900/20"
       >
         <p class="text-xs text-red-600 dark:text-red-400 font-medium">Monthly Expense</p>
-        <p class="text-lg font-bold text-red-700 dark:text-red-300">
+        <p
+          :class="[getFontSizeClass(monthlyExpense, 'text-lg'), 'text-red-700 dark:text-red-300']"
+          class="font-bold transition-all"
+        >
           Rp {{ formatNumber(monthlyExpense) }}
         </p>
       </div>
@@ -75,41 +84,12 @@
       </div>
 
       <template v-else-if="transactionStore.transactions.length > 0">
-        <div
+        <TransactionItem
           v-for="t in transactionStore.transactions"
           :key="t.id"
-          class="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800 transition-all hover:border-blue-100 dark:hover:border-blue-900/30 cursor-pointer active:scale-[0.98]"
+          :transaction="t"
           @click="openDetails(t)"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              :class="
-                t.type === 'INCOME'
-                  ? 'bg-green-50 text-green-600 dark:bg-green-900/20'
-                  : 'bg-red-50 text-red-600 dark:bg-red-900/20'
-              "
-              class="p-2.5 rounded-xl transition-colors"
-            >
-              <component :is="t.type === 'INCOME' ? ArrowDownLeft : ArrowUpRight" :size="20" />
-            </div>
-            <div>
-              <p class="font-bold text-gray-900 dark:text-white leading-tight">
-                {{ t.description }}
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                {{ t.category }} • {{ formatDate(t.date) }}
-              </p>
-            </div>
-          </div>
-          <div class="text-right">
-            <p
-              :class="t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'"
-              class="font-bold text-lg"
-            >
-              {{ t.type === 'INCOME' ? '+' : '-' }} {{ formatNumber(t.amount) }}
-            </p>
-          </div>
-        </div>
+        />
       </template>
 
       <div
@@ -122,6 +102,32 @@
         <h3 class="mt-4 font-bold text-gray-900 dark:text-white">No transactions found</h3>
         <p class="text-sm text-gray-500 dark:text-gray-400">Try adjusting your monthly filter</p>
       </div>
+    </div>
+
+    <!-- Pagination -->
+    <div
+      v-if="transactionStore.pagination.totalPages > 1"
+      class="flex items-center justify-center gap-4 mt-8 pb-8"
+    >
+      <button
+        class="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-800 dark:hover:bg-gray-800 transition-all dark:text-white"
+        :disabled="transactionStore.pagination.page === 1"
+        @click="handlePageChange(transactionStore.pagination.page - 1)"
+      >
+        <ChevronLeft :size="20" />
+      </button>
+
+      <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
+        Page {{ transactionStore.pagination.page }} of {{ transactionStore.pagination.totalPages }}
+      </span>
+
+      <button
+        class="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-800 dark:hover:bg-gray-800 transition-all dark:text-white"
+        :disabled="transactionStore.pagination.page === transactionStore.pagination.totalPages"
+        @click="handlePageChange(transactionStore.pagination.page + 1)"
+      >
+        <ChevronRight :size="20" />
+      </button>
     </div>
 
     <!-- Transaction Detail Drawer -->
@@ -137,8 +143,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useTransactionStore, type Transaction } from '@/stores/transaction'
-import { ArrowDownLeft, ArrowUpRight, SearchX, ChevronDown } from 'lucide-vue-next'
+import { SearchX, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import TransactionDetailDrawer from '@/components/transactions/TransactionDetailDrawer.vue'
+import TransactionItem from '@/components/transactions/TransactionItem.vue'
+import { getFontSizeClass } from '@/utils/amountHelper'
 
 const transactionStore = useTransactionStore()
 
@@ -177,7 +185,7 @@ const months = [
 ]
 
 const years = computed(() => {
-  const startYear = 2026
+  const startYear = 2025
   const endYear = Math.max(2031, currentYear + 5)
   const list = []
   for (let y = startYear; y <= endYear; y++) {
@@ -187,15 +195,11 @@ const years = computed(() => {
 })
 
 const monthlyIncome = computed(() => {
-  return transactionStore.transactions
-    .filter((t) => t.type === 'INCOME')
-    .reduce((sum, t) => sum + t.amount, 0)
+  return transactionStore.summary.income || 0
 })
 
 const monthlyExpense = computed(() => {
-  return transactionStore.transactions
-    .filter((t) => t.type === 'EXPENSE')
-    .reduce((sum, t) => sum + t.amount, 0)
+  return transactionStore.summary.expense || 0
 })
 
 const formatNumber = (num: number) => {
@@ -209,7 +213,19 @@ const formatDate = (dateStr: string) => {
 
 const handleFilterChange = () => {
   transactionStore.fetchTransactions({
-    month: `${selectedYear.value}-${selectedMonth.value}`,
+    month: selectedMonth.value,
+    year: selectedYear.value,
+    page: 1, // Reset to page 1
+    size: 10,
+  })
+}
+
+const handlePageChange = (page: number) => {
+  transactionStore.fetchTransactions({
+    month: selectedMonth.value,
+    year: selectedYear.value,
+    page,
+    size: 10,
   })
 }
 

@@ -14,21 +14,53 @@ export interface Transaction {
 interface TransactionState {
   transactions: Transaction[]
   loading: boolean
+  pagination: {
+    page: number
+    size: number
+    total: number
+    totalPages: number
+  }
+  summary: {
+    income: number
+    expense: number
+  }
 }
 
 export const useTransactionStore = defineStore('transaction', {
   state: (): TransactionState => ({
     transactions: [],
     loading: false,
+    pagination: {
+      page: 1,
+      size: 10,
+      total: 0,
+      totalPages: 0,
+    },
+    summary: {
+      income: 0,
+      expense: 0,
+    },
   }),
   actions: {
-    async fetchTransactions(params?: { month?: string }) {
+    async fetchTransactions(params?: {
+      month?: string
+      year?: string
+      limit?: string
+      page?: number
+      size?: number
+    }) {
       const uiStore = useUiStore()
       this.loading = true
       // We don't show the global overlay for this, but could if needed
       try {
         const response = await api.get('/api/transactions', { params })
         this.transactions = response.data.response || []
+        if (response.data.pagination) {
+          this.pagination = response.data.pagination
+        }
+        if (response.data.summary) {
+          this.summary = response.data.summary
+        }
       } catch (error) {
         console.error('Fetch transactions failed:', error)
       } finally {
