@@ -184,7 +184,7 @@
                   class="appearance-none w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white cursor-pointer"
                 >
                   <option value="" disabled>Select</option>
-                  <option v-for="cat in categoryStore.categories" :key="cat.id" :value="cat.name">
+                  <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.name">
                     {{ cat.name }}
                   </option>
                 </select>
@@ -231,7 +231,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import {
   X,
   ArrowDownLeft,
@@ -302,6 +302,10 @@ watch(
   },
   { immediate: true },
 )
+
+const filteredCategories = computed(() => {
+  return categoryStore.categories.filter((c) => c.type === editedForm.value.type)
+})
 
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('id-ID').format(num)
