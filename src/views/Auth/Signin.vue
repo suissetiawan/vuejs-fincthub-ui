@@ -276,6 +276,10 @@
 import { ref } from 'vue'
 import CommonGridShape from '@/components/common/CommonGridShape.vue'
 import FullScreenLayout from '@/components/layout/FullScreenLayout.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -285,12 +289,18 @@ const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
-const handleSubmit = () => {
-  // Handle form submission
-  console.log('Form submitted', {
-    email: email.value,
-    password: password.value,
-    keepLoggedIn: keepLoggedIn.value,
-  })
+const handleSubmit = async () => {
+  try {
+    await authStore.login({
+      email: email.value,
+      password: password.value,
+      rememberMe: keepLoggedIn.value,
+    })
+    // Optionally, redirect the user after successful login
+    // For example: router.push('/dashboard')
+  } catch (error) {
+    console.error('Login failed:', error)
+    // Handle login error, e.g., display a message to the user
+  }
 }
 </script>

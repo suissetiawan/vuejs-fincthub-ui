@@ -11,7 +11,11 @@
     <BottomNav @add-transaction="handleOpenAddModal" />
 
     <!-- Global Add Transaction Drawer -->
-    <TransactionAddDrawer :is-open="showAddDrawer" @close="showAddDrawer = false" />
+    <TransactionDetailDrawer
+      :is-open="showAddDrawer"
+      :transaction="null"
+      @close="showAddDrawer = false"
+    />
 
     <!-- Toast Notifications Placeholder -->
     <div id="toast-container" class="fixed top-4 right-4 z-[9999]"></div>
@@ -22,7 +26,7 @@
 import { ref } from 'vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import BottomNav from '@/components/layout/BottomNav.vue'
-import TransactionAddDrawer from '@/components/transactions/TransactionAddDrawer.vue'
+import TransactionDetailDrawer from '@/components/transactions/TransactionDetailDrawer.vue'
 
 const showAddDrawer = ref(false)
 

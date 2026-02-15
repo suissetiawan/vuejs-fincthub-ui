@@ -28,7 +28,7 @@
           v-for="cat in categoryStore.categories"
           :key="cat.id"
           @click="openDetails(cat)"
-          class="group p-5 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 dark:hover:border-blue-900/30 cursor-pointer active:scale-95"
+          class="group px-4 py-3 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 hover:border-blue-100 dark:hover:border-blue-900/30 cursor-pointer active:scale-95"
         >
           <div class="flex items-start justify-between">
             <div class="space-y-1">
