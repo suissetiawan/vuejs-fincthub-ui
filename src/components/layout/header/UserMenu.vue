@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { UserCircleIcon, ChevronDownIcon, LogoutIcon, SettingsIcon, InfoCircleIcon } from '@/icons'
+import { UserCircleIcon, ChevronDownIcon, LogoutIcon, SettingsIcon, InfoCircleIcon, PieChartIcon } from '@/icons'
 import ThemeToggler from '../../common/ThemeToggler.vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
@@ -79,8 +79,9 @@ const dropdownRef = ref(null)
 
 const menuItems = computed(() => {
   const items = [
-    { href: '/profile', icon: UserCircleIcon, text: 'Edit profile' },
+    { href: '/profile', icon: UserCircleIcon, text: 'Profile' },
     { href: '/categories', icon: SettingsIcon, text: 'Categories' },
+    { href: '/budget', icon: PieChartIcon, text: 'Budget' },
   ]
 
   if (authStore.isAdmin) {

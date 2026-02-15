@@ -24,6 +24,8 @@ interface TransactionState {
     income: number
     expense: number
   }
+  /** Pengeluaran per kategori untuk bulan tertentu (untuk budget monitoring) */
+  expensesByCategoryForMonth: Record<string, number>
 }
 
 export const useTransactionStore = defineStore('transaction', {
@@ -40,8 +42,28 @@ export const useTransactionStore = defineStore('transaction', {
       income: 0,
       expense: 0,
     },
+    expensesByCategoryForMonth: {},
   }),
   actions: {
+    /** Load expense totals per category for a month (for budget overview) */
+    async fetchExpensesByCategoryForMonth(month: string, year: string) {
+      try {
+        const response = await api.get('/api/transactions', {
+          params: { month, year, size: 200 },
+        })
+        const list = response.data.response || []
+        const byCategory: Record<string, number> = {}
+        list
+          .filter((t: Transaction) => t.type === 'EXPENSE')
+          .forEach((t: Transaction) => {
+            byCategory[t.category] = (byCategory[t.category] || 0) + t.amount
+          })
+        this.expensesByCategoryForMonth = byCategory
+      } catch (error) {
+        console.error('Fetch expenses by category failed:', error)
+        this.expensesByCategoryForMonth = {}
+      }
+    },
     async fetchTransactions(params?: {
       month?: string
       year?: string

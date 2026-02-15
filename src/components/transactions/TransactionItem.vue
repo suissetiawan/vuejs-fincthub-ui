@@ -20,7 +20,7 @@
       </div>
       <div>
         <p
-          :class="getTextFontSizeClass(transaction.description, 'font-black')"
+          :class="getTextFontSizeClass(transaction.description, 'font-medium')"
           class="text-gray-900 dark:text-white leading-tight transition-all"
         >
           {{ transaction.description }}

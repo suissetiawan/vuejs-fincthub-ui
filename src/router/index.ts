@@ -32,10 +32,19 @@ const router = createRouter({
           component: () => import('@/views/TransactionsView.vue'),
         },
         {
+          path: 'budget',
+          name: 'budget',
+          component: () => import('@/views/BudgetView.vue'),
+        },
+        {
+          path: 'more',
+          name: 'more',
+          component: () => import('@/views/MoreView.vue'),
+        },
+        {
           path: 'categories',
           name: 'categories',
           component: () => import('@/views/CategoriesView.vue'),
-          meta: { isAdmin: true },
         },
         {
           path: 'profile',

@@ -1,7 +1,13 @@
 <template>
   <DetailDrawerLayout
     :is-open="isOpen"
-    :title="isEditing ? (isNew ? 'New Category' : 'Edit Category') : 'Category Details'"
+    :title="
+      !category
+        ? 'New Category'
+        : isEditing
+          ? 'Edit Category'
+          : 'Category Details'
+    "
     @close="close"
     height-class="h-auto max-h-[90vh]"
   >
@@ -32,7 +38,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-3 pt-3">
+      <div v-if="canEdit" class="flex flex-col gap-3 pt-3">
         <BaseButton @click="isEditing = true" block>
           <Edit2 :size="20" />
           Edit Category
@@ -44,7 +50,7 @@
       </div>
     </div>
 
-    <div v-else class="space-y-6">
+    <div v-else-if="canEdit" class="space-y-6">
       <!-- Edit Mode -->
       <div class="space-y-4">
         <div>
@@ -98,6 +104,10 @@
         <BaseButton @click="cancelEdit" variant="secondary" block> Cancel </BaseButton>
       </div>
     </div>
+
+    <div v-else class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+      Select a category to view details.
+    </div>
   </DetailDrawerLayout>
 </template>
 
@@ -108,10 +118,14 @@ import { useCategoryStore, type Category } from '@/stores/category'
 import DetailDrawerLayout from '@/components/layout/DetailDrawerLayout.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
-const props = defineProps<{
-  isOpen: boolean
-  category: Category | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    isOpen: boolean
+    category: Category | null
+    canEdit?: boolean
+  }>(),
+  { canEdit: true }
+)
 
 const emit = defineEmits(['close'])
 const categoryStore = useCategoryStore()

@@ -66,6 +66,54 @@
       </div>
     </div>
 
+    <!-- Budget Overview -->
+    <div
+      v-if="budgetOverview.length > 0"
+      class="p-5 bg-white rounded-2xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Bulan Ini</h3>
+        <router-link
+          to="/budget"
+          class="flex items-center gap-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full text-xs font-bold transition-all active:scale-95 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400"
+        >
+          Lihat Semua <ChevronRight :size="14" />
+        </router-link>
+      </div>
+      <div class="space-y-3">
+        <div
+          v-for="b in budgetOverview"
+          :key="b.id"
+          class="flex flex-col md:flex-row md:items-center md:justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+        >
+          <div class="font-medium text-gray-900 dark:text-white">{{ b.categoryName }}</div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+              Rp {{ formatNumber(b.used) }} / Rp {{ formatNumber(b.amount) }}
+            </span>
+            <span
+              :class="[
+                'text-xs font-bold px-2 py-0.5 rounded-full',
+                b.status === 'exceeded'
+                  ? 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                  : b.status === 'warning'
+                    ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
+                    : 'bg-green-100 text-green-600 dark:bg-green-900/30',
+              ]"
+            >
+              {{
+                b.status === 'exceeded'
+                  ? 'Melebihi'
+                  : b.status === 'warning'
+                    ? 'Hampir habis'
+                    : 'Aman'
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Chart -->
     <div
       class="p-5 bg-white rounded-2xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800"
@@ -106,6 +154,7 @@ import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Title, Tooltip, Legend } from 'chart.js'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useTransactionStore } from '@/stores/transaction'
+import { useBudgetStore } from '@/stores/budget'
 import { getFontSizeClass } from '@/utils/amountHelper'
 import TransactionItem from '@/components/transactions/TransactionItem.vue'
 
@@ -113,6 +162,9 @@ ChartJS.register(ArcElement, Title, Tooltip, Legend)
 
 const dashboardStore = useDashboardStore()
 const transactionStore = useTransactionStore()
+const budgetStore = useBudgetStore()
+
+const budgetOverview = computed(() => budgetStore.budgetsForCurrentMonth.slice(0, 5))
 
 const currentDate = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
 
@@ -171,9 +223,14 @@ const chartOptions = {
 }
 
 onMounted(async () => {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const year = String(now.getFullYear())
   await Promise.all([
     dashboardStore.fetchDashboardData(),
     transactionStore.fetchTransactions({ limit: '5' } as any),
+    budgetStore.fetchBudgets({ month, year }),
+    transactionStore.fetchExpensesByCategoryForMonth(month, year),
   ])
 })
 </script>
