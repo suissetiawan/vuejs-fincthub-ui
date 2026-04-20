@@ -14,8 +14,11 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Total Balance</p>
-            <h3 class="text-2xl font-bold mt-1 text-gray-900 dark:text-white">
-              Rp {{ formatNumber(summary.balance) }}
+            <h3
+              :class="getFontSizeClass(dashboardStore.summary.balance)"
+              class="font-bold mt-1 text-gray-900 dark:text-white"
+            >
+              Rp {{ formatNumber(dashboardStore.summary.balance) }}
             </h3>
           </div>
           <div class="p-3 bg-blue-50 text-blue-600 rounded-xl dark:bg-blue-900/20">
@@ -30,8 +33,11 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Income</p>
-            <h3 class="text-2xl font-bold mt-1 text-green-600">
-              Rp {{ formatNumber(summary.income) }}
+            <h3
+              :class="[getFontSizeClass(dashboardStore.summary.income), 'text-green-600']"
+              class="font-bold mt-1"
+            >
+              Rp {{ formatNumber(dashboardStore.summary.income) }}
             </h3>
           </div>
           <div class="p-3 bg-green-50 text-green-600 rounded-xl dark:bg-green-900/20">
@@ -46,12 +52,63 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Expense</p>
-            <h3 class="text-2xl font-bold mt-1 text-red-600">
-              Rp {{ formatNumber(summary.expense) }}
+            <h3
+              :class="[getFontSizeClass(dashboardStore.summary.expense), 'text-red-600']"
+              class="font-bold mt-1"
+            >
+              Rp {{ formatNumber(dashboardStore.summary.expense) }}
             </h3>
           </div>
           <div class="p-3 bg-red-50 text-red-600 rounded-xl dark:bg-red-900/20">
             <TrendingDown :size="24" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Overview -->
+    <div
+      v-if="budgetOverview.length > 0"
+      class="p-5 bg-white rounded-2xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Bulan Ini</h3>
+        <router-link
+          to="/budget"
+          class="flex items-center gap-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full text-xs font-bold transition-all active:scale-95 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400"
+        >
+          Lihat Semua <ChevronRight :size="14" />
+        </router-link>
+      </div>
+      <div class="space-y-3">
+        <div
+          v-for="b in budgetOverview"
+          :key="b.id"
+          class="flex flex-col md:flex-row md:items-center md:justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+        >
+          <div class="font-medium text-gray-900 dark:text-white">{{ b.categoryName }}</div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+              Rp {{ formatNumber(b.used) }} / Rp {{ formatNumber(b.amount) }}
+            </span>
+            <span
+              :class="[
+                'text-xs font-bold px-2 py-0.5 rounded-full',
+                b.status === 'exceeded'
+                  ? 'bg-red-100 text-red-600 dark:bg-red-900/30'
+                  : b.status === 'warning'
+                    ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
+                    : 'bg-green-100 text-green-600 dark:bg-green-900/30',
+              ]"
+            >
+              {{
+                b.status === 'exceeded'
+                  ? 'Melebihi'
+                  : b.status === 'warning'
+                    ? 'Hampir habis'
+                    : 'Aman'
+              }}
+            </span>
           </div>
         </div>
       </div>
@@ -71,100 +128,64 @@
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
-        <router-link to="/transactions" class="text-sm text-blue-600 hover:underline"
-          >View All</router-link
+        <router-link
+          to="/transactions"
+          class="flex items-center gap-1 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full text-xs font-bold transition-all active:scale-95 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400"
         >
+          View All <ChevronRight :size="14" />
+        </router-link>
       </div>
       <div class="space-y-3">
-        <div
+        <TransactionItem
           v-for="t in recentTransactions"
           :key="t.id"
-          class="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              :class="
-                t.type === 'INCOME'
-                  ? 'bg-green-50 text-green-600 dark:bg-green-900/20'
-                  : 'bg-red-50 text-red-600 dark:bg-red-900/20'
-              "
-              class="p-2 rounded-lg"
-            >
-              <component :is="t.type === 'INCOME' ? ArrowDownLeft : ArrowUpRight" :size="20" />
-            </div>
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">{{ t.description }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ t.category }} • {{ t.date }}
-              </p>
-            </div>
-          </div>
-          <p :class="t.type === 'INCOME' ? 'text-green-600' : 'text-red-600'" class="font-bold">
-            {{ t.type === 'INCOME' ? '+' : '-' }} {{ formatNumber(t.amount) }}
-          </p>
-        </div>
+          :transaction="t"
+          :clickable="false"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Wallet, TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight } from 'lucide-vue-next'
+import { ref, onMounted, computed } from 'vue'
+import { Wallet, TrendingUp, TrendingDown, ChevronRight } from 'lucide-vue-next'
 import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Title, Tooltip, Legend } from 'chart.js'
+import { useDashboardStore } from '@/stores/dashboard'
+import { useTransactionStore } from '@/stores/transaction'
+import { useBudgetStore } from '@/stores/budget'
+import { getFontSizeClass } from '@/utils/amountHelper'
+import TransactionItem from '@/components/transactions/TransactionItem.vue'
 
 ChartJS.register(ArcElement, Title, Tooltip, Legend)
 
+const dashboardStore = useDashboardStore()
+const transactionStore = useTransactionStore()
+const budgetStore = useBudgetStore()
+
+const budgetOverview = computed(() => budgetStore.budgetsForCurrentMonth.slice(0, 5))
+
 const currentDate = new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
-
-const summary = ref({
-  balance: 4950000,
-  income: 5000000,
-  expense: 50000,
-})
-
-const recentTransactions = ref([
-  {
-    id: 1,
-    description: 'Lunch at Warteg',
-    category: 'Food',
-    amount: 50000,
-    type: 'EXPENSE',
-    date: '2026-02-12',
-  },
-  {
-    id: 2,
-    description: 'Monthly Salary',
-    category: 'Salary',
-    amount: 5000000,
-    type: 'INCOME',
-    date: '2026-02-01',
-  },
-])
 
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('id-ID').format(num)
 }
 
-const chartData = {
-  labels: ['Salary', 'Food', 'Transport', 'Entertainment', 'Rent'],
+const chartData = computed(() => ({
+  labels: dashboardStore.breakdown.map((b) => b.category),
   datasets: [
     {
-      data: [5000000, 450000, 200000, 150000, 1000000],
-      backgroundColor: [
-        '#10b981', // green (Salary)
-        '#ef4444', // red (Food)
-        '#f59e0b', // amber (Transport)
-        '#8b5cf6', // violet (Entertainment)
-        '#3b82f6', // blue (Rent)
-      ],
+      data: dashboardStore.breakdown.map((b) => b.amount),
+      backgroundColor: dashboardStore.breakdown.map((b) => b.color),
       hoverOffset: 15,
       borderWidth: 0,
       cutout: '70%',
     },
   ],
-}
+}))
+
+const recentTransactions = computed(() => transactionStore.transactions.slice(0, 3))
 
 const chartOptions = {
   responsive: true,
@@ -200,4 +221,16 @@ const chartOptions = {
     },
   },
 }
+
+onMounted(async () => {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const year = String(now.getFullYear())
+  await Promise.all([
+    dashboardStore.fetchDashboardData(),
+    transactionStore.fetchTransactions({ limit: '5' } as any),
+    budgetStore.fetchBudgets({ month, year }),
+    transactionStore.fetchExpensesByCategoryForMonth(month, year),
+  ])
+})
 </script>

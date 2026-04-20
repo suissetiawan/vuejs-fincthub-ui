@@ -3,7 +3,7 @@ import api from '@/services/api'
 import { useUiStore } from './ui'
 
 interface User {
-  id: number
+  id: number | string
   username: string
   email: string
   role: 'USER' | 'ADMIN'
@@ -43,15 +43,7 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isLoggedIn: (state) => !!state.accessToken && state.accessToken !== 'undefined',
     isAdmin: (state) => state.user?.role === 'ADMIN',
-    displayName: (state) => {
-      if (!state.user?.email) return 'User'
-      // Extract prefix before @
-      const prefix = state.user.email.split('@')[0]
-      // Split by . or - and take the first part
-      const firstName = prefix.split(/[.-]/)[0]
-      // Capitalize first letter
-      return firstName.charAt(0).toUpperCase() + firstName.slice(1)
-    },
+    displayName: (state) => (state.user?.username ? state.user.username : 'User'),
   },
   actions: {
     async login(credentials: any) {
@@ -65,11 +57,15 @@ export const useAuthStore = defineStore('auth', {
         this.refreshToken = data.refreshToken
 
         const payload = parseJwt(this.accessToken!)
+
+        const resProfile = await api.get('api/users/' + payload.sub)
+        const profile = resProfile.data.response
+
         this.user = {
-          id: data.userId,
-          username: credentials.username || credentials.email,
-          email: credentials.email || '',
-          role: payload?.role || 'USER',
+          id: profile.id,
+          username: profile.name,
+          email: profile.email,
+          role: profile.role,
         }
 
         localStorage.setItem('accessToken', this.accessToken!)
@@ -123,6 +119,30 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
+        uiStore.setLoading(false)
+      }
+    },
+    async updateProfile(data: { name?: string; email?: string }) {
+      if (!this.user?.id) return
+      const uiStore = useUiStore()
+      uiStore.setLoading(true, 'Updating profile...')
+      try {
+        await api.put(`api/users/${this.user.id}`, {
+          name: data.name ?? this.user.username,
+          email: data.email ?? this.user.email,
+        })
+        const resProfile = await api.get(`api/users/${this.user.id}`)
+        const profile = resProfile.data.response
+        this.user = {
+          id: profile.id,
+          username: profile.name,
+          email: profile.email,
+          role: profile.role,
+        }
+        localStorage.setItem('user', JSON.stringify(this.user))
+      } catch (error) {
+        throw error
+      } finally {
         uiStore.setLoading(false)
       }
     },

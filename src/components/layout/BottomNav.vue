@@ -32,31 +32,28 @@
       </div>
 
       <router-link
-        v-if="authStore.isAdmin"
-        to="/categories"
+        to="/budget"
         class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-primary dark:text-gray-400"
         active-class="text-blue-600 dark:text-blue-500"
       >
-        <Tags :size="20" />
-        <span class="text-xs mt-1">Categories</span>
+        <Wallet :size="20" />
+        <span class="text-xs mt-1">Budget</span>
       </router-link>
 
       <router-link
-        to="/profile"
+        to="/more"
         class="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-primary dark:text-gray-400"
         active-class="text-blue-600 dark:text-blue-500"
       >
-        <User :size="20" />
-        <span class="text-xs mt-1">Profile</span>
+        <MoreHorizontal :size="20" />
+        <span class="text-xs mt-1">More</span>
       </router-link>
     </div>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { LayoutDashboard, History, Plus, Tags, User } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/auth'
+import { LayoutDashboard, History, Plus, Wallet, MoreHorizontal } from 'lucide-vue-next'
 
-const authStore = useAuthStore()
 defineEmits(['add-transaction'])
 </script>

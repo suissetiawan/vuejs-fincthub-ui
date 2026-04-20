@@ -1,12 +1,19 @@
 import axios from 'axios'
+import { API_CONFIG } from '@/config/api'
+import { setupMockInterceptor } from '@/mocks'
 
 const api = axios.create({
   baseURL: '/',
-  timeout: 10000,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
+// Setup Mock Interceptor hanya jika USE_MOCKS = true
+if (API_CONFIG.USE_MOCKS) {
+  setupMockInterceptor(api)
+}
 
 export const setupInterceptors = (authStore: any) => {
   api.interceptors.request.use(
@@ -22,16 +29,39 @@ export const setupInterceptors = (authStore: any) => {
 
   api.interceptors.response.use(
     (response) => {
+      // Silently ignore 405 responses for auth endpoints (GET requests)
+      if (response.status === 405 && response.config?.url?.includes('/auth/')) {
+        return Promise.resolve({
+          ...response,
+          data: { message: 'Method not allowed' },
+        })
+      }
       console.log(`[API Response Success] ${response.config.url}`)
       return response
     },
     async (error) => {
-      console.log(`[API Response Error] ${error.config?.url} - Status: ${error.response?.status}`)
+      const status = error.response?.status
+      const url = error.config?.url
+      
+      // Silently ignore 405 errors for auth endpoints (GET requests)
+      if (status === 405 && url?.includes('/auth/')) {
+        console.log(`[API] Ignoring 405 for GET request to ${url}`)
+        return Promise.resolve({
+          data: { message: 'Method not allowed' },
+          status: 405,
+          statusText: 'Method Not Allowed',
+          config: error.config,
+        })
+      }
+      
+      console.log(`[API Response Error] ${url} - Status: ${status}`)
+      
       const originalRequest = error.config
       const isAuthRequest = originalRequest?.url?.includes('/auth/')
 
+      // Don't retry for 4xx errors (client errors) except 401
       if (
-        error.response?.status === 401 &&
+        status === 401 &&
         originalRequest &&
         !originalRequest._retry &&
         !isAuthRequest
@@ -48,6 +78,7 @@ export const setupInterceptors = (authStore: any) => {
           return Promise.reject(refreshError)
         }
       }
+      
       return Promise.reject(error)
     },
   )

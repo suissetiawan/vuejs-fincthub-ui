@@ -5,7 +5,7 @@ import { useUiStore } from './ui'
 export interface Category {
   id: number
   name: string
-  description?: string
+  type: 'INCOME' | 'EXPENSE'
 }
 
 interface CategoryState {

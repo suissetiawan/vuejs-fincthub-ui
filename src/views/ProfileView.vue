@@ -42,7 +42,13 @@
         </div>
       </div>
 
-      <div class="pt-6 border-t border-gray-100 dark:border-gray-800">
+      <div class="pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+        <button
+          @click="openEditDrawer"
+          class="w-full py-4 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 font-black rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <Edit2 :size="20" /> Edit Profile
+        </button>
         <button
           @click="handleLogout"
           class="w-full py-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/10 dark:hover:bg-red-900/20 font-black rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -51,16 +57,91 @@
         </button>
       </div>
     </div>
+
+    <!-- Edit Profile Drawer -->
+    <DetailDrawerLayout
+      :is-open="isEditDrawerOpen"
+      title="Edit Profile"
+      @close="closeEditDrawer"
+      height-class="h-auto max-h-[90vh]"
+    >
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Name</label>
+          <input
+            v-model="editForm.name"
+            type="text"
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
+            placeholder="Your name"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email</label>
+          <input
+            v-model="editForm.email"
+            type="email"
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none dark:text-white"
+            placeholder="your@email.com"
+          />
+        </div>
+        <div class="flex flex-col gap-3 pt-3">
+          <BaseButton @click="handleSaveProfile" :disabled="!editForm.name || !editForm.email" block>
+            Save Changes
+          </BaseButton>
+          <BaseButton @click="closeEditDrawer" variant="secondary" block> Cancel </BaseButton>
+        </div>
+      </div>
+    </DetailDrawerLayout>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { User as UserIcon, LogOut } from 'lucide-vue-next'
+import { User as UserIcon, LogOut, Edit2 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import DetailDrawerLayout from '@/components/layout/DetailDrawerLayout.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+const isEditDrawerOpen = ref(false)
+const editForm = ref({ name: '', email: '' })
+
+const openEditDrawer = () => {
+  editForm.value = {
+    name: authStore.user?.username ?? '',
+    email: authStore.user?.email ?? '',
+  }
+  isEditDrawerOpen.value = true
+}
+
+const closeEditDrawer = () => {
+  isEditDrawerOpen.value = false
+}
+
+watch(
+  () => authStore.user,
+  (user) => {
+    if (user && isEditDrawerOpen.value) {
+      editForm.value = { name: user.username, email: user.email }
+    }
+  },
+  { deep: true }
+)
+
+const handleSaveProfile = async () => {
+  try {
+    await authStore.updateProfile({
+      name: editForm.value.name,
+      email: editForm.value.email,
+    })
+    closeEditDrawer()
+  } catch (error) {
+    console.error('Update profile failed:', error)
+  }
+}
 
 const handleLogout = async () => {
   await authStore.logout()

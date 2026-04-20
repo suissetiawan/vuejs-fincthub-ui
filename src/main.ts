@@ -10,7 +10,6 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import VueApexCharts from 'vue3-apexcharts'
 import { setupInterceptors } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 
@@ -19,7 +18,6 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.use(VueApexCharts)
 
 // Initialize interceptors with the auth store
 const authStore = useAuthStore(pinia)
